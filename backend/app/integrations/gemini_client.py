@@ -99,7 +99,7 @@ def get_mock_completion(prompt: str) -> str:
     # 1. Check if the prompt requests a JSON response (e.g. final plan or document list)
     if "json" in prompt_lower or "visitplan" in prompt_lower:
         # Check if it's the required documents JSON list
-        if "required documents" in prompt_lower or "list of strings" in prompt_lower:
+        if ("required documents" in prompt_lower or "list of strings" in prompt_lower) and "visitplan" not in prompt_lower:
             if "nic" in prompt_lower or "identity" in prompt_lower:
                 return '["NIC Front & Back", "Original Birth Certificate", "Grama Niladhari Letter"]'
             elif "passport" in prompt_lower:
@@ -255,21 +255,37 @@ def get_mock_completion(prompt: str) -> str:
         return json.dumps(res, ensure_ascii=False)
 
     # Standard plain text responses if not JSON
-    if "nic" in prompt_lower:
+    # If this is the chatbot assistant prompt, extract the specific question text so context words don't hijack matches
+    if "prajanavigator clarification assistant" in prompt_lower:
+        import re
+        match = re.search(r'User Question:\s*"(.*)"', prompt, re.IGNORECASE)
+        question_text = match.group(1).lower() if match else prompt_lower
+    else:
+        question_text = prompt_lower
+
+    if "nic" in question_text or "identity" in question_text or "renew" in question_text:
         return (
             "Based on the processed query regarding National Identity Card (NIC) renewal, "
             "it is required that citizens submit their old NIC, an original birth certificate, "
             "and 3 recent photographs certified by the Grama Niladhari. "
             "Please visit the Divisional Secretariat of your region."
         )
-    elif "passport" in prompt_lower:
+    elif "passport" in question_text or "travel" in question_text:
         return (
             "For passport applications, you must provide your original birth certificate, "
             "your current NIC, and photocopies of both. "
             "Applications should be submitted to the Department of Immigration and Emigration "
             "or authorized Divisional Secretariats."
         )
+    elif "tree" in question_text or "felling" in question_text or "cut" in question_text:
+        return (
+            "Under the Felling of Trees (Control) Act, felling Jak, Breadfruit, or Palmyra trees "
+            "requires a permit. You must submit the application form, original land deed + certified copy, "
+            "Grama Niladhari recommendation letter, and photographs. The official fee is LKR 100."
+        )
     else:
+        if "prajanavigator clarification assistant" in prompt_lower:
+            return "We don't have enough information currently."
         return (
             "This is a mock response from PrajaNavigator AI. The Gemini API is currently "
             "running without an active API key. Please configure GEMINI_API_KEY in the environment "
