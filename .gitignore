@@ -65,3 +65,9 @@ Thumbs.db
 # Docker
 .dockerignore
 docker-compose.override.yml
+
+gemini.md
+claude.md
+
+# Uploads
+uploads/
